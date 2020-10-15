@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>TEst Montreal KRRRAAZEEEE</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+<script src="https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js"></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css" rel="stylesheet" />
+<style>
+ body {
+  margin: 0;
+  padding: 0;
+}
+
+h2,
+h3 {
+  margin: 15px;
+  font-size: 1em;
+}
+
+h3 {
+  font-size: 1em;
+}
+
+p {
+  font-size: 0.85em;
+  margin: 10px;
+  text-align: left;
+}
+
+/**
+* Create a position for the map
+* on the page */
+#map {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+}
+
+.map-overlay {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.8);
+  margin-right: 20px;
+  font-family: Arial, sans-serif;
+  overflow: auto;
+  border-radius: 3px;
+}
+
+#features {
+  top: 0;
+  height: 100px;
+  margin-top: 20px;
+  width: 1250px;
+}
+
+#legend {
+  padding: 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  line-height: 18px;
+  height: 150px;
+  margin-bottom: 40px;
+  width: 100px;
+}
+
+.legend-key {
+  display: inline-block;
+  border-radius: 20%;
+  width: 10px;
+  height: 10px;
+  margin-right: 5px;
+  }
+
+.quakeInfo {
+  position: absolute;
+  bottom: 35px;
+  right: 15px
+  font-family: sans-serif;
+  margin-top: 2px;
+  margin-left: 2px;
+  margin-right: 2px;
+  margin-bottom: 2px;
+  padding: 2px;
+  width: 24%;
+  border: 2px solid black;
+  font-size: 14px;
+  color: #222;
+  background-color: #fff;
+  border-radius: 3px;
+}
+}
+</style>
+</head>
+
+<body>
+<div id="map"></div>
+<div class='map-overlay' id='legend'><strong></strong></div>
+<div class='quakeInfo'>
+  <div><strong><h3>Ménages locataires à faible revenu <BR>et logements sociaux à Montréal</h3><BR></strong></div>
+  <div><strong>Arrondissement : </strong> <span id='Arr'></span></div>
+  <div><strong>Ménages (tx d'effort >30%) : </strong> <span id='M30'></span></div>
+  <div><strong>Ménages (Total):</strong> <span id='ML'></span></div>
+  <div><strong>Part du quartier (ménages à tx d'effort >30%) : </strong> <span id='PM30'></span></div>
+  <div><strong>Part de la ville (ménages à tx d'effort >30%) : </strong> <span id='P30V'></span></div>
+  <div><strong>Logements sociaux : </strong> <span id='LS'></span></div>
+  <div><strong>Logements (Total) :</strong> <span id='LL'></span></div>
+  <div><strong>Part de logements sociaux :</strong> <span id='PLS'></span></div>
+</div>
+
+<div class='w240 round shadow-darken10 px12 py12 txt-s'>
+  <strong class='block mb6'>Title description</strong>
+  <div class='flex-parent flex-parent--center-main flex-parent--center-cross align-center'>
+    <div class='flex-child flex-child--grow wmin24'>
+      <span class='inline-block w3 h3 round-full bg-blue'></span>
+    </div>
+    <div class='flex-child flex-child--grow wmin24'>
+      <span class='inline-block w6 h6 round-full bg-blue'></span>
+    </div>
+    <div class='flex-child flex-child--grow wmin24'>
+      <span class='inline-block w12 h12 round-full bg-blue'></span>
+    </div>
+    <div class='flex-child flex-child--grow wmin24'>
+      <span class='inline-block w18 h18 round-full bg-blue'></span>
+    </div>
+    <div class='flex-child flex-child--grow wmin24'>
+      <span class='inline-block w24 h24 round-full bg-blue'></span>
+    </div>
+  </div>
+  <div class='grid txt-xs align-center'>
+    <div class='col wmin24'>3</div>
+    <div class='col wmin24'>6</div>
+    <div class='col wmin24'>12</div>
+    <div class='col wmin24'>18</div>
+    <div class='col wmin24'>24</div>
+  </div>
+</div>
+
+
+
+
+<script>
+  mapboxgl.accessToken = 'pk.eyJ1IjoiZ2lsdGNoMSIsImEiOiJja2c4c2Y4MHIwNHV2MnRwbHQxNXJrNHRmIn0.TL8nFh-kmI2erD1K6_mcyA';
+var map = new mapboxgl.Map({
+    container: 'map', // container id
+    style: 'mapbox://styles/giltch1/ckg8x0za20no219n3cno5gqfw', // map style URL from Mapbox Studio
+  center: [-73.561668, 45.508888],
+  zoom :12,
+  pitch: 10,
+  bearing: 0,
+  minZoom:5, maxZoom:18
+});
+
+map.on('load', function() {
+
+
+        
+        
+// Ajout des prix IRIS sous forme de FILL (couche annee ensemble)
+  
+  map.addSource('Quartier', {
+        type: 'vector',
+        url: 'mapbox://giltch1.925kofw9',
+        generateId: true,
+    });
+    
+  // Polygones quartiers (part de la ville)
+      map.addLayer({
+        'id': 'MenagesP30V',
+        'type': 'fill',
+        'source': 'Quartier',
+        'source-layer': 'Menages-a0be8y',
+        'layout': {'visibility': 'visible'},
+        'paint': {'fill-outline-color':'grey',
+                  'fill-opacity':0.9,  
+                  'fill-color': {
+                  property: 'P30V',
+                  stops: [
+                    [2, '#ffeda0'],
+                    [4, '#FD8D3C'],
+                    [6, '#FC4E2A'],
+                    [8, '#E31A1C'],
+                    [10, '#BD0026'],
+                    [12, '#800026'],]},
+          }
+});  
+
+
+      //map.setPaintProperty('MenagesP30V', 'fill-color': "#635f5f");
+
+//map.setPaintProperty('MenagesP30V', 'fill-color', ["interpolate",[
+  //"step",
+  //["get", "P30V"],"#800026",2,"#ffeda0",4, "#FD8D3C", 6,"#FC4E2A",8, "#E31A1C", 10,"#BD0026", 12,"#800026"
+//]]);
+
+
+  // Points Logements sociaux
+      map.addSource('Logs', {
+        type: 'vector',
+        url: 'mapbox://giltch1.8oxd3kxf'
+    });
+  
+  map.addLayer({
+        'id': 'Logs',
+        'type': 'circle',
+        'source': 'Logs',
+        'source-layer': 'A_2D-bu039i',
+        'layout': {'visibility': 'visible'},
+        'paint': {'circle-color': 'black',
+                  'circle-stroke-color': '#635f5f',
+                  'circle-stroke-width': 1,
+                  'circle-radius':2
+                  //'circle-radius' :["interpolate",["linear"],["zoom"],8,0,11.5,["interpolate",["linear"],["get", "Total_Loge"],5,  1,  10,  2,  20,  3,  50,  5,100,  7,  200,  10]],
+                  }
+                  });
+
+// Interactivité CLICK
+map.on('click', function(e) {
+  var features = map.queryRenderedFeatures(e.point, {
+    layers: ['Logs'] // replace this with the name of the layer
+  });
+
+    if (!features.length) {return;}
+    var feature = features[0];
+    var popup = new mapboxgl.Popup({ offset: [10, -15] })
+        .setLngLat(feature.geometry.coordinates)
+        .setHTML('<h2>'+"Nom du projet : " + feature.properties.Projet +'</h2> <h2>'
+    +"Rue : " + feature.properties.Rue +  '</h2><h2>'
+    +"Nbre total de logements : " + feature.properties.Total_Loge +  '</h2>')  
+      .addTo(map);
+});
+
+
+
+
+//Interactivité HOVER (fenetre)
+    
+var ArrDisplay = document.getElementById('Arr');
+var ML30Display = document.getElementById('M30');
+var MLDisplay = document.getElementById('ML');
+var PM30Display = document.getElementById('PM30');
+var P30VDisplay = document.getElementById('P30V');
+var LSDisplay = document.getElementById('LS');
+var LLDisplay = document.getElementById('LL');
+var PLSDisplay = document.getElementById('PLS');
+
+var quakeID = null;
+
+map.on('mousemove', 'MenagesP30V', (e) => {
+
+map.getCanvas().style.cursor = 'pointer';
+  // Set variables equal to the current feature's magnitude, location, and time
+var ArrD = e.features[0].properties.Quartier;
+var M30D = e.features[0].properties.M30;
+var MLD = e.features[0].properties.ML;
+var PM30D = e.features[0].properties.PM30;
+var P30VD = e.features[0].properties.P30V;
+var LSD = e.features[0].properties.LS;
+var LLD = e.features[0].properties.LL;
+var PLSD = e.features[0].properties.PLS;
+
+  // Check whether features exist
+  if (e.features.length > 0) {
+    // Display the magnitude, location, and time in the sidebar
+  ArrDisplay.textContent = ArrD;
+  ML30Display.textContent = M30D;
+  MLDisplay.textContent = MLD;
+  PM30Display.textContent = PM30D;
+  P30VDisplay.textContent = P30VD;
+  LSDisplay.textContent = LSD;
+ LLDisplay.textContent = LLD;
+  PLSDisplay.textContent = PLSD;
+
+    // If quakeID for the hovered feature is not null,
+    // use removeFeatureState to reset to the default behavior
+    if (quakeID) {
+      map.removeFeatureState({
+        source: "Quartier",
+        id: quakeID
+      });
+    }
+
+    quakeID = e.features[0].id;
+
+    // When the mouse moves over the earthquakes-viz layer, update the
+    // feature state for the feature under the mouse
+    map.setFeatureState({
+      source: 'Quartier',
+      id: quakeID,
+    }, {
+      hover: true
+    });
+
+  }
+});
+
+var layers = ['0-2%', '2-4%', '4-6%', '6-8%', '10-12%', '>12%'];
+var colors = [,'#ffeda0', '#FD8D3C', '#FC4E2A', '#E31A1C', '#BD0026', '#800026'];
+
+for (i = 0; i < layers.length; i++) {
+  var layer = layers[i];
+  var color = colors[i];
+  var item = document.createElement('div');
+  var key = document.createElement('span');
+  key.className = 'legend-key';
+  key.style.backgroundColor = color;
+
+  var value = document.createElement('span');
+  value.innerHTML = layer;
+  item.appendChild(key);
+  item.appendChild(value);
+  legend.appendChild(item);
+}
+
+//AVANT
+});
+
+var map = L.mapbox.map('map')
+  .setView([38.8929, -77.0252], 14)
+  .addLayer(L.mapbox.styleLayer('mapbox://styles/mapbox/streets-v11'));
+map.scrollWheelZoom.disable();
+
+var myLayer = L.mapbox.featureLayer().addTo(map);
+myLayer.setGeoJSON(geojson);
+
+L.mapbox.legendControl({ position: 'topright' }).addLegend('<strong>My walk from the White House to the hill!</strong>').addTo(map);
+
+
+</script>
+ 
+</body>
+</html>
